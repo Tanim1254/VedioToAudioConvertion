@@ -1,0 +1,35 @@
+private async Task<IActionResult> ConvertVideoToAudio(IFormFile file)
+{
+    if (file == null || file.Length == 0)
+        return BadRequest("Please upload a valid video file.");
+
+    var videoFilePath = Path.Combine(Path.GetTempPath(), file.FileName);
+
+    // Save the video to a temporary location
+    using (var stream = new FileStream(videoFilePath, FileMode.Create))
+    {
+        await  file.CopyToAsync(stream);
+    }
+    var executablePath = @"C:\ffmpeg\bin";
+    var outputAudioPath = Path.Combine(Path.GetTempPath(), Path.GetFileNameWithoutExtension(file.FileName) + ".mp3");
+    FFmpeg.SetExecutablesPath(executablePath);
+    await FFmpeg.Conversions.FromSnippet.ExtractAudio(videoFilePath, outputAudioPath);
+
+    // FFmpeg conversion: video to audio
+    try
+    {
+        // FFmpeg conversion: video to audio
+        var audioBytes = await System.IO.File.ReadAllBytesAsync(outputAudioPath);
+        return File(audioBytes, "audio/mpeg", Path.GetFileName(outputAudioPath));
+
+
+    }
+    catch (Exception ex)
+    {
+        // Log the exception
+        return StatusCode(500, "Internal Server Error: " + ex.Message);
+    }
+
+    // Return the audio file
+
+}
